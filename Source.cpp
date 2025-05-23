@@ -49,67 +49,91 @@ long long ExpressionCalculator::CalculateExpression(std::vector<std::string> Num
 }
 
 long long ExpressionCalculator::CalculateExpressionString(std::string Expression) {
-    Expression.erase(std::remove(Expression.begin(), Expression.end(), ' '), Expression.end());
-
-    int LastNumber = 0;
-    for (int Count = 0; Count < Expression.size(); Count = Count + 1) {
-        if (isdigit(Expression[Count])) {
-            LastNumber = Count;
-        }
-        else if (Expression[Count] != '+' && Expression[Count] != '-' && Expression[Count] != '*' && Expression[Count] != '/') {
+    Expression.insert(0, "(");
+    Expression.push_back(')');
+    int LeftParCount = std::count(Expression.begin(), Expression.end(), '(');
+    int RightParCount = std::count(Expression.begin(), Expression.end(), ')');
+    if (LeftParCount != RightParCount) {
+        throw std::exception();
+    }
+    if (LeftParCount == 0) {
+        LeftParCount = 1;
+    }
+    
+    for (int Count = 0; Count < LeftParCount; Count = Count + 1) {
+        int LeftParPos = Expression.find_last_of('(');
+        int RightParPos = Expression.find_first_of(')', LeftParPos);
+        if (RightParPos == std::string::npos) {
             throw std::exception();
         }
-    }
+        std::string CurrentExpression = Expression.substr(LeftParPos + 1, RightParPos - LeftParPos - 1);
+        
+        
+        CurrentExpression.erase(std::remove(CurrentExpression.begin(), CurrentExpression.end(), ' '), CurrentExpression.end());
 
-    Expression = Expression.substr(0, LastNumber + 1);
-    std::vector<std::string> NumberList;
-    std::vector<char> OperatorList;
-    std::string CurrentNumber;
-    for (int Count = 0; Count < Expression.size(); Count = Count + 1) {
-        if (Count == Expression.size() - 1) {
-            if (isdigit(Expression[Count])) {
-                CurrentNumber.push_back(Expression[Count]);
-                NumberList.push_back(CurrentNumber);
-                CurrentNumber.clear();
+        int LastNumber = 0;
+        for (int Count = 0; Count < CurrentExpression.size(); Count = Count + 1) {
+            if (isdigit(CurrentExpression[Count])) {
+                LastNumber = Count;
             }
-            else {
+            else if (CurrentExpression[Count] != '+' && CurrentExpression[Count] != '-' && CurrentExpression[Count] != '*' && CurrentExpression[Count] != '/') {
                 throw std::exception();
             }
         }
-        else if (Expression[Count] == '+' || Expression[Count] == '-' || Expression[Count] == '*' || Expression[Count] == '/') {
-            if (CurrentNumber.empty()) {
-                if (Expression[Count] == '+' || Expression[Count] == '-') {
-                    if (Expression[Count] == '-') {
-                        CurrentNumber.push_back(Expression[Count]);
-                    }
+
+        CurrentExpression = CurrentExpression.substr(0, LastNumber + 1);
+        std::vector<std::string> NumberList;
+        std::vector<char> OperatorList;
+        std::string CurrentNumber;
+        for (int Count = 0; Count < CurrentExpression.size(); Count = Count + 1) {
+            if (Count == CurrentExpression.size() - 1) {
+                if (isdigit(CurrentExpression[Count])) {
+                    CurrentNumber.push_back(CurrentExpression[Count]);
+                    NumberList.push_back(CurrentNumber);
+                    CurrentNumber.clear();
                 }
                 else {
                     throw std::exception();
                 }
             }
-            else if (CurrentNumber == "-") {
-                throw std::exception();
+            else if (CurrentExpression[Count] == '+' || CurrentExpression[Count] == '-' || CurrentExpression[Count] == '*' || CurrentExpression[Count] == '/') {
+                if (CurrentNumber.empty()) {
+                    if (CurrentExpression[Count] == '+' || CurrentExpression[Count] == '-') {
+                        if (CurrentExpression[Count] == '-') {
+                            CurrentNumber.push_back(CurrentExpression[Count]);
+                        }
+                    }
+                    else {
+                        throw std::exception();
+                    }
+                }
+                else if (CurrentNumber == "-") {
+                    throw std::exception();
+                }
+                else {
+                    NumberList.push_back(CurrentNumber);
+                    CurrentNumber.clear();
+                    OperatorList.push_back(CurrentExpression[Count]);
+                }
+            }
+            else if (isdigit(CurrentExpression[Count])) {
+                CurrentNumber.push_back(CurrentExpression[Count]);
             }
             else {
-                NumberList.push_back(CurrentNumber);
-                CurrentNumber.clear();
-                OperatorList.push_back(Expression[Count]);
+                throw std::exception();
             }
         }
-        else if (isdigit(Expression[Count])) {
-            CurrentNumber.push_back(Expression[Count]);
-        }
-        else {
-            throw std::exception();
-        }
+        Expression.replace(LeftParPos, RightParPos - LeftParPos + 1,  std::to_string(CalculateExpression(NumberList, OperatorList)));
     }
-    return CalculateExpression(NumberList, OperatorList);
+    return std::stoll(Expression);
 }
 
 
 int main() {
     std::string Expression;
-    std::cout << "Input Expression: ";
-    std::getline(std::cin, Expression);
-    std::cout << "Result: " << ExpressionCalculator::CalculateExpressionString(Expression);
+    while (true) {
+        std::cout << "Input Expression: ";
+        std::getline(std::cin, Expression);
+        std::cout << "Result: " << ExpressionCalculator::CalculateExpressionString(Expression) << std::endl;
+    }
 }
