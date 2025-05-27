@@ -18,9 +18,12 @@
     <ClCompile Include="Source.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="ExpressionCalculator.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Header.h">
+    <ClInclude Include="ExpressionCalculator.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
