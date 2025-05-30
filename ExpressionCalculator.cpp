@@ -1,49 +1,90 @@
 #include "ExpressionCalculator.h"
+#include "Operation.h"
 #include <vector>
 #include <exception>
 #include <string>
 #include <algorithm>
+#include <queue>
 
 long long ExpressionCalculator::CalculateExpression(std::vector<std::string> NumberList, std::vector<char> OperatorList) {
-    for (int Count = 0; Count < OperatorList.size();) {
-        if (OperatorList[Count] == '*' || OperatorList[Count] == '/') {
-            long long FirstNumber = std::stoll(NumberList[Count]);
-            long long SecondNumber = std::stoll(NumberList[Count + 1]);
+    if (OperatorList.size() != NumberList.size() - 1) {
+        throw std::exception();
+    }
+    else if (NumberList.size() == 1) {
+        return std::stoll(NumberList[0]);
+    }
+
+    std::vector<Operation> OperationList;
+    std::queue<Operation> OperationQueue;
+
+
+    OperationList.push_back(Operation(OperatorList[0], new long long*(new long long(std::stoll(NumberList[0]))), new long long* (new long long(std::stoll(NumberList[0])))));
+    for (int Count = 1; Count < OperatorList.size(); Count = Count + 1) {
+        OperationList.push_back(Operation(OperatorList[Count], OperationList[Count - 1].Second, new long long* (new long long(std::stoll(NumberList[Count + 1])))));
+    }
+
+    for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
+        if (OperationList[Count].Operator == '*' || OperationList[Count].Operator == '/') {
+            OperationQueue.push(OperationList[Count]);
+        }
+    }
+
+    for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
+        if (OperationList[Count].Operator == '+' || OperationList[Count].Operator == '-') {
+            OperationQueue.push(OperationList[Count]);
+        }
+    }
+
+
+    long long TotalResult = 0;
+    while(!OperationQueue.empty()) {
+            long long FirstNumber = **OperationQueue.front().First;
+            long long SecondNumber = **OperationQueue.front().Second;
             long long Result = 0;
-            if (OperatorList[Count] == '*') {
+            if (OperationQueue.front().Operator == '*') {
                 Result = FirstNumber * SecondNumber;
+
+                *(OperationQueue.front().Second) = *(OperationQueue.front().First);
+                **OperationQueue.front().Second = Result;
             }
-            else if (OperatorList[Count] == '/') {
+            else if (OperationQueue.front().Operator == '/') {
                 if (SecondNumber == 0) {
                     throw std::exception();
                 }
                 else {
                     Result = FirstNumber / SecondNumber;
+
+                    *(OperationQueue.front().Second) = *(OperationQueue.front().First);
+                    **OperationQueue.front().Second = Result;
                 }
             }
-            NumberList.erase(NumberList.begin() + Count + 1);
-            NumberList[Count] = std::to_string(Result);
-            OperatorList.erase(OperatorList.begin() + Count);
+            else if (OperationQueue.front().Operator == '+') {
+                Result = FirstNumber + SecondNumber;
+
+                *(OperationQueue.front().First) = *(OperationQueue.front().Second);
+                **OperationQueue.front().Second = Result;
+            }
+            else if (OperationQueue.front().Operator == '-') {
+                Result = FirstNumber - SecondNumber;
+
+                *(OperationQueue.front().First) = *(OperationQueue.front().Second);
+                **OperationQueue.front().Second = Result;
+            }
+            TotalResult = Result;
+            
+            /*delete *(OperationQueue.front().First);
+            *(OperationQueue.front().First) = nullptr;
+            delete OperationQueue.front().First;
+            OperationQueue.front().First = nullptr;
+
+            delete *(OperationQueue.front().Second);
+            *(OperationQueue.front().Second) = nullptr;
+            delete OperationQueue.front().Second;
+            OperationQueue.front().Second= nullptr;*/
+
+            OperationQueue.pop();
         }
-        else {
-            Count = Count + 1;
-        }
-    }
-    for (int Count = 0; Count < OperatorList.size();) {
-        long long FirstNumber = std::stoll(NumberList[0]);
-        long long SecondNumber = std::stoll(NumberList[1]);
-        long long Result = 0;
-        if (OperatorList[Count] == '+') {
-            Result = FirstNumber + SecondNumber;
-        }
-        else if (OperatorList[Count] == '-') {
-            Result = FirstNumber - SecondNumber;
-        }
-        NumberList.erase(NumberList.begin() + 1);
-        NumberList[0] = std::to_string(Result);
-        OperatorList.erase(OperatorList.begin());
-    }
-    return std::stoll(NumberList[0]);
+    return TotalResult;
 }
 
 long long ExpressionCalculator::CalculateExpressionString(std::string Expression) {
