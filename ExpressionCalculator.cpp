@@ -5,22 +5,28 @@
 #include <string>
 #include <algorithm>
 #include <queue>
+#include <stack>
 
-long long ExpressionCalculator::CalculateExpression(std::vector<std::string> NumberList, std::vector<char> OperatorList) {
+double ExpressionCalculator::CalculateExpression(std::vector<double> NumberList, std::vector<char> OperatorList) {
     if (OperatorList.size() != NumberList.size() - 1) {
         throw std::exception();
     }
     else if (NumberList.size() == 1) {
-        return std::stoll(NumberList[0]);
+        return NumberList[0];
     }
 
     std::vector<Operation> OperationList;
     std::queue<Operation> OperationQueue;
+    std::stack<std::pair<double*, double**>> Pointers;
 
+    OperationList.push_back(Operation(OperatorList[0], new double*(new double(NumberList[0])), new double* (new double(NumberList[1]))));
 
-    OperationList.push_back(Operation(OperatorList[0], new long long*(new long long(std::stoll(NumberList[0]))), new long long* (new long long(std::stoll(NumberList[0])))));
+    Pointers.push({OperationList.back().First[0], OperationList.back().First});
+    Pointers.push({OperationList.back().Second[0], OperationList.back().Second});
+
     for (int Count = 1; Count < OperatorList.size(); Count = Count + 1) {
-        OperationList.push_back(Operation(OperatorList[Count], OperationList[Count - 1].Second, new long long* (new long long(std::stoll(NumberList[Count + 1])))));
+        OperationList.push_back(Operation(OperatorList[Count], OperationList[Count - 1].Second, new double* (new double(NumberList[Count + 1]))));
+        Pointers.push({OperationList.back().Second[0], OperationList.back().Second});
     }
 
     for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
@@ -36,11 +42,11 @@ long long ExpressionCalculator::CalculateExpression(std::vector<std::string> Num
     }
 
 
-    long long TotalResult = 0;
+    double TotalResult = 0;
     while(!OperationQueue.empty()) {
-            long long FirstNumber = **OperationQueue.front().First;
-            long long SecondNumber = **OperationQueue.front().Second;
-            long long Result = 0;
+            double FirstNumber = **OperationQueue.front().First;
+            double SecondNumber = **OperationQueue.front().Second;
+            double Result = 0;
             if (OperationQueue.front().Operator == '*') {
                 Result = FirstNumber * SecondNumber;
 
@@ -72,22 +78,21 @@ long long ExpressionCalculator::CalculateExpression(std::vector<std::string> Num
             }
             TotalResult = Result;
             
-            /*delete *(OperationQueue.front().First);
-            *(OperationQueue.front().First) = nullptr;
-            delete OperationQueue.front().First;
-            OperationQueue.front().First = nullptr;
-
-            delete *(OperationQueue.front().Second);
-            *(OperationQueue.front().Second) = nullptr;
-            delete OperationQueue.front().Second;
-            OperationQueue.front().Second= nullptr;*/
-
             OperationQueue.pop();
-        }
+    }
+    while (!Pointers.empty()) {
+        std::pair<double*, double**> PointerPair = Pointers.top();
+        delete PointerPair.first;
+        PointerPair.first = nullptr;
+        delete PointerPair.second;
+        PointerPair.second = nullptr;
+
+        Pointers.pop();
+    }
     return TotalResult;
 }
 
-long long ExpressionCalculator::CalculateExpressionString(std::string Expression) {
+double ExpressionCalculator::CalculateExpressionString(std::string Expression) {
     Expression.erase(std::remove(Expression.begin(), Expression.end(), ' '), Expression.end());
     if (Expression.empty()) {
         throw std::exception();
@@ -100,7 +105,7 @@ long long ExpressionCalculator::CalculateExpressionString(std::string Expression
         throw std::exception();
     }
 
-    for (int Count = 0; Count < LeftParCount; Count = Count + 1) {
+    for (int ParCount = 0; ParCount < LeftParCount; ParCount = ParCount + 1) {
         int LeftParPos = Expression.find_last_of('(');
         int RightParPos = Expression.find_first_of(')', LeftParPos);
         if (RightParPos == std::string::npos) {
@@ -108,14 +113,15 @@ long long ExpressionCalculator::CalculateExpressionString(std::string Expression
         }
         
         std::string CurrentExpression = Expression.substr(LeftParPos + 1, RightParPos - LeftParPos - 1);
-        std::vector<std::string> NumberList;
+        std::vector<double> NumberList;
         std::vector<char> OperatorList;
         std::string CurrentNumber;
+        bool IsFloatingPoint = false;
         for (int Count = 0; Count < CurrentExpression.size(); Count = Count + 1) {
             if (Count == CurrentExpression.size() - 1) {
-                if (isdigit(CurrentExpression[Count])) {
+                if (isdigit(CurrentExpression[Count]) || (CurrentExpression[Count] == '.' && !CurrentNumber.empty() && CurrentNumber != "-")) {
                     CurrentNumber.push_back(CurrentExpression[Count]);
-                    NumberList.push_back(CurrentNumber);
+                    NumberList.push_back(std::stod(CurrentNumber));
                     CurrentNumber.clear();
                 }
                 else {
@@ -125,25 +131,38 @@ long long ExpressionCalculator::CalculateExpressionString(std::string Expression
             else if (CurrentExpression[Count] == '+' || CurrentExpression[Count] == '-' || CurrentExpression[Count] == '*' || CurrentExpression[Count] == '/') {
                 if (CurrentNumber.empty()) {
                     if (CurrentExpression[Count] == '+' || CurrentExpression[Count] == '-') {
-                        if (CurrentExpression[Count] == '-') {
-                            CurrentNumber.push_back(CurrentExpression[Count]);
-                        }
+                        CurrentNumber.push_back(CurrentExpression[Count]);
                     }
                     else {
                         throw std::exception();
                     }
                 }
-                else if (CurrentNumber == "-") {
+                else if (CurrentNumber == "-" || CurrentNumber == "+") {
                     throw std::exception();
                 }
                 else {
-                    NumberList.push_back(CurrentNumber);
-                    CurrentNumber.clear();
-                    OperatorList.push_back(CurrentExpression[Count]);
+                    if (CurrentNumber == ".") {
+                        throw std::exception();
+                    }
+                    else {
+                        NumberList.push_back(std::stod(CurrentNumber));
+                        CurrentNumber.clear();
+                        IsFloatingPoint = false;
+                        OperatorList.push_back(CurrentExpression[Count]);
+                    }
                 }
             }
             else if (isdigit(CurrentExpression[Count])) {
                 CurrentNumber.push_back(CurrentExpression[Count]);
+            }
+            else if (CurrentExpression[Count] == '.') {
+                if (IsFloatingPoint == false) {
+                    CurrentNumber.push_back(CurrentExpression[Count]);
+                    IsFloatingPoint = true;
+                }
+                else {
+                    throw std::exception();
+                }
             }
             else {
                 throw std::exception();
@@ -151,5 +170,5 @@ long long ExpressionCalculator::CalculateExpressionString(std::string Expression
         }
         Expression.replace(LeftParPos, RightParPos - LeftParPos + 1, std::to_string(CalculateExpression(NumberList, OperatorList)));
     }
-    return std::stoll(Expression);
+    return std::stod(Expression);
 }

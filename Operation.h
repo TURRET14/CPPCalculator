@@ -1,8 +1,8 @@
 class Operation
 {
 public:
-	Operation(char Operator, long long** First, long long** Second);
+	Operation(char Operator, double** First, double** Second);
 	char Operator;
-	long long** First;
-	long long** Second;
+	double** First;
+	double** Second;
 };

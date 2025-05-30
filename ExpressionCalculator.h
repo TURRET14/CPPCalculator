@@ -3,6 +3,6 @@
 
 class ExpressionCalculator {
 public:
-    static long long CalculateExpression(std::vector<std::string> NumberList, std::vector<char> OperatorList);
-    static long long CalculateExpressionString(std::string Expression);
+    static double CalculateExpression(std::vector<double> NumberList, std::vector<char> OperatorList);
+    static double CalculateExpressionString(std::string Expression);
 };

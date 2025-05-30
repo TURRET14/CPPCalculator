@@ -1,6 +1,6 @@
 #include "Operation.h"
-Operation::Operation(char Operator, long long** First, long long** Second) {
-	this->Operator = Operator;
-	this->First = First;
-	this->Second = Second;
+Operation::Operation(char OperatorArg, double** FirstArg, double** SecondArg) {
+	Operator = OperatorArg;
+	First = FirstArg;
+	Second = SecondArg;
 }
