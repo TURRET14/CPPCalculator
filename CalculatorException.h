@@ -1,6 +1,6 @@
 #include <exception>
 
-class CalculatorException : std::exception
+class CalculatorException : public std::exception
 {
 public:
 	CalculatorException();
