@@ -7,109 +7,71 @@
 #include <algorithm>
 #include <queue>
 #include <stack>
+#include <memory>
 
 double ExpressionCalculator::CalculateExpression(std::vector<double> NumberList, std::vector<char> OperatorList) {
     std::vector<Operation> OperationList;
     std::queue<Operation> OperationQueue;
-    std::stack<std::pair<double*, double**>> Pointers;
-    
-    try {
-        if (OperatorList.size() != NumberList.size() - 1) {
-            throw CalculatorException("Incorrect Expression!");
+
+    if (OperatorList.size() != NumberList.size() - 1) {
+        throw CalculatorException("Incorrect Expression!");
+    }
+    else if (NumberList.size() == 1) {
+        return NumberList[0];
+    }
+    OperationList.push_back(Operation(OperatorList[0], std::shared_ptr<std::shared_ptr<double>>(new std::shared_ptr<double>(new double(NumberList[0]))), std::shared_ptr<std::shared_ptr<double>>(new std::shared_ptr<double>(new double(NumberList[1])))));
+
+    for (int Count = 1; Count < OperatorList.size(); Count = Count + 1) {
+        OperationList.push_back(Operation(OperatorList[Count], OperationList[Count - 1].Second, std::shared_ptr<std::shared_ptr<double>>(new std::shared_ptr<double>(new double(NumberList[Count + 1])))));
+    }
+
+    for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
+        if (OperationList[Count].Operator == '*' || OperationList[Count].Operator == '/') {
+            OperationQueue.push(OperationList[Count]);
         }
-        else if (NumberList.size() == 1) {
-            return NumberList[0];
+    }
+
+    for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
+        if (OperationList[Count].Operator == '+' || OperationList[Count].Operator == '-') {
+            OperationQueue.push(OperationList[Count]);
         }
+    }
 
-        OperationList.push_back(Operation(OperatorList[0], new double* (new double(NumberList[0])), new double* (new double(NumberList[1]))));
 
-        Pointers.push({ OperationList.back().First[0], OperationList.back().First });
-        Pointers.push({ OperationList.back().Second[0], OperationList.back().Second });
-
-        for (int Count = 1; Count < OperatorList.size(); Count = Count + 1) {
-            OperationList.push_back(Operation(OperatorList[Count], OperationList[Count - 1].Second, new double* (new double(NumberList[Count + 1]))));
-            Pointers.push({ OperationList.back().Second[0], OperationList.back().Second });
+    double TotalResult = 0;
+    while (!OperationQueue.empty()) {
+        double FirstNumber = **OperationQueue.front().First;
+        double SecondNumber = **OperationQueue.front().Second;
+        double Result = 0;
+        if (OperationQueue.front().Operator == '*') {
+            Result = FirstNumber * SecondNumber;
+            *(OperationQueue.front().Second) = *(OperationQueue.front().First);
+            **OperationQueue.front().Second = Result;
         }
-
-        for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
-            if (OperationList[Count].Operator == '*' || OperationList[Count].Operator == '/') {
-                OperationQueue.push(OperationList[Count]);
+        else if (OperationQueue.front().Operator == '/') {
+            if (SecondNumber == 0) {
+                throw CalculatorException("Division By Zero!");
             }
-        }
-
-        for (int Count = 0; Count < OperationList.size(); Count = Count + 1) {
-            if (OperationList[Count].Operator == '+' || OperationList[Count].Operator == '-') {
-                OperationQueue.push(OperationList[Count]);
-            }
-        }
-
-
-        double TotalResult = 0;
-        while (!OperationQueue.empty()) {
-            double FirstNumber = **OperationQueue.front().First;
-            double SecondNumber = **OperationQueue.front().Second;
-            double Result = 0;
-            if (OperationQueue.front().Operator == '*') {
-                Result = FirstNumber * SecondNumber;
+            else {
+                Result = FirstNumber / SecondNumber;
                 *(OperationQueue.front().Second) = *(OperationQueue.front().First);
                 **OperationQueue.front().Second = Result;
             }
-            else if (OperationQueue.front().Operator == '/') {
-                if (SecondNumber == 0) {
-                    throw CalculatorException("Division By Zero!");
-                }
-                else {
-                    Result = FirstNumber / SecondNumber;
-                    *(OperationQueue.front().Second) = *(OperationQueue.front().First);
-                    **OperationQueue.front().Second = Result;
-                }
-            }
-            else if (OperationQueue.front().Operator == '+') {
-                Result = FirstNumber + SecondNumber;
-                *(OperationQueue.front().First) = *(OperationQueue.front().Second);
-                **OperationQueue.front().Second = Result;
-            }
-            else if (OperationQueue.front().Operator == '-') {
-                Result = FirstNumber - SecondNumber;
-                *(OperationQueue.front().First) = *(OperationQueue.front().Second);
-                **OperationQueue.front().Second = Result;
-            }
-            TotalResult = Result;
-            OperationQueue.pop();
         }
-
-        while (!Pointers.empty()) {
-            std::pair<double*, double**> PointerPair = Pointers.top();
-            delete PointerPair.first;
-            PointerPair.first = nullptr;
-            delete PointerPair.second;
-            PointerPair.second = nullptr;
-            Pointers.pop();
+        else if (OperationQueue.front().Operator == '+') {
+            Result = FirstNumber + SecondNumber;
+            *(OperationQueue.front().First) = *(OperationQueue.front().Second);
+            **OperationQueue.front().Second = Result;
         }
-        return TotalResult;
+        else if (OperationQueue.front().Operator == '-') {
+            Result = FirstNumber - SecondNumber;
+            *(OperationQueue.front().First) = *(OperationQueue.front().Second);
+            **OperationQueue.front().Second = Result;
+        }
+        TotalResult = Result;
+        OperationQueue.pop();
     }
-    catch (CalculatorException Exception) {
-        while (!Pointers.empty()) {
-            std::pair<double*, double**> PointerPair = Pointers.top();
-            delete PointerPair.first;
-            PointerPair.first = nullptr;
-            delete PointerPair.second;
-            PointerPair.second = nullptr;
-            Pointers.pop();
-        }
-        throw Exception;
-    }
-    catch (std::exception Exception) {
-        while (!Pointers.empty()) {
-            std::pair<double*, double**> PointerPair = Pointers.top();
-            delete PointerPair.first;
-            PointerPair.first = nullptr;
-            delete PointerPair.second;
-            PointerPair.second = nullptr;
-            Pointers.pop();
-        }
-        throw Exception;
-    }
+    return TotalResult;
 }
 
 double ExpressionCalculator::CalculateExpressionString(std::string Expression) {

@@ -1,2 +1,2 @@
 #include "Operation.h"
-Operation::Operation(char Operator, double** First, double** Second) : Operator(Operator), First(First), Second(Second) {}
+Operation::Operation(char Operator, std::shared_ptr<std::shared_ptr<double>> First, std::shared_ptr<std::shared_ptr<double>> Second) : Operator(Operator), First(First), Second(Second) {}

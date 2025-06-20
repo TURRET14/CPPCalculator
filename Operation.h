@@ -1,8 +1,10 @@
+#include <memory>
+
 class Operation
 {
 public:
-	Operation(char Operator, double** First, double** Second);
+	Operation(char Operator, std::shared_ptr<std::shared_ptr<double>> First, std::shared_ptr<std::shared_ptr<double>> Second);
 	char Operator;
-	double** First;
-	double** Second;
+	std::shared_ptr<std::shared_ptr<double>> First;
+	std::shared_ptr<std::shared_ptr<double>> Second;
 };
