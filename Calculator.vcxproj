@@ -127,11 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CalculatorException.cpp" />
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="Operation.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CalculatorException.h" />
     <ClInclude Include="ExpressionCalculator.h" />
     <ClInclude Include="Operation.h" />
   </ItemGroup>

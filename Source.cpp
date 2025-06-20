@@ -6,6 +6,6 @@ int main() {
     while (true) {
         std::cout << "Input Expression: ";
         std::getline(std::cin, Expression);
-        std::cout << "Result: " << ExpressionCalculator::CalculateExpressionString(Expression) << std::endl;
+        std::cout << "Result: " << std::fixed << ExpressionCalculator::CalculateExpressionString(Expression) << std::endl;
     }
 }

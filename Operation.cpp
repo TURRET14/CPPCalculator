@@ -1,6 +1,2 @@
 #include "Operation.h"
-Operation::Operation(char OperatorArg, double** FirstArg, double** SecondArg) {
-	Operator = OperatorArg;
-	First = FirstArg;
-	Second = SecondArg;
-}
+Operation::Operation(char Operator, double** First, double** Second) : Operator(Operator), First(First), Second(Second) {}
